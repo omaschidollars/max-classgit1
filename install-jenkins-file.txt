@@ -1,0 +1,301 @@
+HOW TO INSTALL JENKINS IN AWS EC2 (change)
+
+prerequisites (number 1-2)
+
+1. Launch Red-hat Linux EC2 instance (EC2 RHEL7.X) or Amazon linux EC2 instance
+   With internet Access
+   Open port 8080 in Security Group for internet
+
+2. Install java and set home path
+   #  yum install java-1.8*
+   #  find /usr/lib/jvm/java-1.8* |head  -n 3
+   /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-1.amzn2.0.1.x86_64
+   # vi .bash_profile and paste (JAVA_HOME=/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-1.amzn2.0.1.x86_64)
+    inbetween #user specific enviroment and 
+     PATH = $PATH:$HOME/bin lines( change this line to PATH=$PATH:$JAVA_HOME:$HOME/bin) :wq!
+   #  source ~/.bash_profile (refresh the bash profile since you exit and came back)
+   #  echo $JAVA_HOME (will show the path where java is installed)
+
+   
+
+INSTALL JENKINS
+you can install jenkins using the rpm or by setting up the repo.I setup the repo so that i can 
+update it easily in future. 
+
+3. Download Jenkins on to EC2 instance
+   sudo wget -O /etc/yum.repos.d/jenkins.repo https://pkg.jenkins.io/redhat-stable/jenkins.repo
+   sudo rpm --import https://pkg.jenkins.io/redhat-stable/jenkins.io.key
+
+4. Install jenkins
+   # yum install jenkins
+
+5.A. Start jenkins service (you must be root user or it will ask you for your password)
+   # systemctl start jenkins
+
+5.B. setup jenkins to start at boot
+     systemctl enable jenkins
+
+6.   Check java version
+     
+    # java --version
+
+7. CONFIGURATION
+    1.To access jenkins > open AWS console and copy the public IP of the server and paste it on
+      a browser and make sure you are accessing it on port:8080. It will open up a page that 
+      display UNLOCK JENKINS and a passwrd /var/lib/jenkins/secrets/initialAdminPassword. Copy the
+ password and paste it on your CLI with cat /var/lib/jenkins/secrets/initialAdminPassword and its
+      going to give you a default password. Copy the default password and paste it in the space
+      where you see administrator password in your browser unlock jenkins page.
+      Login to jenkins console
+      # <Public IP>:8080
+        Username : admin
+        password location: /var/lib/jenkins/secrets/initialAdminPassword
+   2. install plugins installation (it will download the packages and install them all)
+
+      CREATE FIRST ADMIN USER
+   3. change admin password
+      admin >  configurate > password
+
+   4. Configure java path profile under jenkins configuration
+
+      Manage Jenkins > Global Tool Configuration> JDK and click add jdk
+      you can add more jdk if you have any other that you are using
+
+   5. To know that jenkins is running, (create a demo-project)
+      click on new item
+      Type a name on (ENTER AN ITEM NAME)
+      Select free style and click ok
+      add description
+      under build choose execute shell
+      #!/bin/bash
+      echo "God is Great project"
+      click save
+      Click on Build now (and a build will be schedule)
+       if you want to see if the output is there click #1 and choose console output from the 
+       drop down                                                             
+
+
+  /usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-1.amzn2.0.1.x86_64
+
+/usr/lib/jvm/java-1.8.0-openjdk-1.8.0.265.b01-1.amzn2.0.1.x86_64
+
+
+
+                   HOW TO CREATE USERS IN JENKINS
+click on jenkins on the right
+click on manage jenkins
+click on manage users
+click on create users
+
+install plugins that restrict users to their job role only
+click on manage jenkins
+click on manage plugins
+click on available
+Type Role-Based Authorization strategy
+Tick Role-Based Authorization strategy
+click install without restart
+Tick Restart Jenkins when installation is complete and no jobs are running
+ 
+IF YOU ARE LOGGED OUT, LOG BACK IN WITH YOUR ADMIN USERNAME/PASSWORD
+click jenkins on the right
+click manage jenkins
+click configure global security
+scroll down to (Athorization) and you will see (Role-Based Strategy) among the IAM permissions
+Tick Role-Based Strategy
+click apply
+click save
+
+To MANAGE AND ASSIGN ROLES FOR USERS
+click manage jenkins
+click manage and assign roles
+click manage roles
+create global role for (employees) by typing Employee in the space (Role to add)
+Create Item Roles or Project Roles for users (Developers and Testers)
+in "role to add" type  Developers
+in "pattern" type Dev.*
+
+in "role to add" type  Testers
+in "pattern" type Test.*
+
+click apply and save the configurations
+
+Click Assign Roles
+Add the names of the users to "Global roles"
+Type the names in "User/group to add"
+Tick the Roles that applies to each one of them
+
+Add the names of users to "Item roles"
+Type the names in "User/group to add"
+Tick the Roles that applies to each one of them
+click apply and save. 
+
+IF YOU LOG IN WITH OMA CREDENTIALS NOW, YOU WILL BE ABLE TO SEE ONLY DEV PROJECTS
+IF YOU LOG IN WITH CHI CREDENTIALS NOW, YOU WILL BE ABLE TO SEE ONLY TEST PROJECTS
+
+
+SECURING JENKINS SERVER | CONFIGURE GLOBAL JENKINS SERVER
+There are few things you can do to secure the server for example changing the Admin password and
+removing the password file and setting some access on your global security of your jenkins itself.
+The first thing to do is to change your default Admin password and you can do this when you:
+Go to your Admin User, 
+Go to configure section
+Change the initial password that was given to your configuration
+click apply and save
+YOU SHOULD CREATE SOME OTHER USERS THAT CAN PERFORM THE FUNCTION AND NOT USE YOUR ADMIN CREDENTIAL
+ITSELF
+AFTER CHANGING THE PASSWORD
+YOU SHOULD REMOVE THE FILE FROM YOUR SERVER ALSO (optional)
+
+IN YOUR CLI TYPE
+
+cd /var/lib/jenkins
+ ls -l secrets (You will find a file call initialAdminpassword) delete it if its there.
+
+GO BACK TO JENKINS AND CLICK MANAGE JENKINS
+CLICK MANAGE GLOBAL SECURITY
+ENABLE SECURITY IF ITS NOT ALREADY ENABLED
+CHOOSE YOUR ACCESS CONTROL
+CHOOSE YOUR AUTHORIZATION ( Poject-based Matrix Authorization Strategy) is better
+scroll down and check if SSH server is running, Disable it so that you dont get unnessesary attacks,
+but if you have to use it, make sure you run it on another port other than port 22 so that you
+dont get unnecessary attacks
+
+
+
+
+HOW TO INSTALL JENKINS PLUGINS INSTALLATION | NECESSARY JENKINS PLUGINS IN REALTIME
+IF THE SERVER HAS INTERNET ACCESS, THEN INSTALL FROM THE JENKINS PORTAL ITSELF
+Click Manage Jenkins
+click Manage plugings
+Click Available
+Type the name of the plugging that you want in the SEARCH column
+Tick the box to select it 
+Click install without restart
+If you are logged out, sign in again
+click manage jenkins
+click manage plugings
+click installed and you will see the plugings you just added
+(You can use the above to change to Green Ball plugin too)
+
+If your jenkins server is behind the Proxy,you can do that in "Advanced" 
+ click Advance
+do your configurations
+
+
+Jenkins Master and Slave Concept
+
+A Jenkins master comes with the basic installation of Jenkins, and in this configuration, the 
+master handles all the tasks for your build system
+
+If you are working on multiple projects you may run multiple jobs on each and every project. 
+Some projects need to run on some particular nodes, and in this process, we need to configure 
+slaves. Jenkins slaves connect to the Jenkins master using the Java Network Launch Protocol.
+
+The Jenkins master acts to schedule the jobs and assign slaves and send builds to slaves to 
+execute the jobs.
+
+It will also monitor the slave state (offline or online) and getting back the build result
+ responses from slaves and the display build results on the console output. The workload of
+ building jobs is delegated to multiple slaves.
+
+BEFORE ANYTHING ELSE 
+  SETUP JENKINS SLAVE
+  
+# create user and add the user to wheel group
+  useradd jenkins-slave-01
+  sudo usermod -aG wheel jenkins-slave-01 
+# create ssh keys 
+  sudo su - jenkins-slave-01
+  ssh-keygen -t rsa -N "" -f /home/jenkins-slave-01/.ssh/id_rsa
+  THIS WILL GENERATE THE PUBLIC AND PRIVATE KEY PAIR
+# The private and public keys will be created at these locations 
+  /home/jenkins-slave-01/.ssh/id_rsa       and
+  /home/jenkins-slave-01/.ssh/id_rsa.pub
+  cd .ssh
+  cat id_rsa.pub > authorized_keys
+  chmod 700 authorized_keysmk
+
+  CONFIGURATION ON MASTER
+  Copy the slave node's public key[id_rsa.pub] to master Node's [known_hosts] files
+
+   mkdir -p /var/lib/jenkins/.ssh
+   cd /var/lib/jenkins/.ssh
+   ssh-keyscan -H SLAVE-HOST-IP >>/var/lib/jenkins/.ssh/known_hosts
+   # ssh-keyscan -H 172.31.38.42 >>/var/lib/jenkins/.ssh/known_hosts
+   chown jenkins:jenkins /var/lib/jenkins/.ssh/known_hosts
+   chmod 700 /var/lib/jenkins/.ssh/known_hosts
+
+Steps to Configure Jenkins Master and Slave Nodes
+1.Click on Manage Jenkins in the left corner on the Jenkins dashboard.
+2.Click on Manage Nodes.
+3.Select New Node and enter the name of the node in the Node Name field.
+4.Select Permanent Agent and click the OK button. Initially, you will get only one option,
+ "Permanent Agent." Once you have one or more slaves you will get the "Copy Existing Node" option.
+5.Enter the required information.
+  Some required fields include:
+  1.NAME: of the slave. e.g:Test
+  2.DESCRIPTION: Description for this slave (optional). e.g: testing slave
+  3.# of EXECUTORS:Maximum number of parallel builds jenkins master perform on this slave e.g 2
+  4.REMOTE ROOT DIRECTORY: A slave needs to have a directory dedicated to jenkins.Specify the path
+    to this directory e.g /home/jenkins-slave-01
+  5.USAGE:control how jenkins schedules builds on this node. e.g: only build jobs with label 
+    expressions matching the slave name
+  6.LAUNCH METHOD: controls how jenkins starts this agent. e.g: Launch agents vis SSH.
+
+6.Enter the Hostname in the Host field.
+
+  
+7.Select the Add button to add credentials and click jenkins
+8.Enter USERNAME,PASSWORD,ID, AND DESCRIPTION.
+9. Select the dropdown menu to add credentials in the CREDENTIALS field.
+
+10.Select the next dropdown to add the Host Key Verification Strategy under NON VERIFYING
+ VERIFICATION STRATEGY.
+
+11. Select Keep this agent online as much as possible in the Availability field.
+12. Click the Save button.
+
+
+CREATING A FREESTYLE PROJECT and RUNNING on THE SLAVE MACHINE
+
+1.Click on Save  and it will redirect to job's view page
+2.On the left pane, click the Build Now button to execute your Pipeline.
+3.We can verify the history of the executed build under the Build History by clicking the build
+number.
+4.Click on the build number and select Console Output. Here you can see the executed job in the 
+remote host and output.
+
+CREATING A PIPELINE AND RUNNING ON THE SLAVE MACHINE
+
+1.Click New Item in the top left corner on the dashboard.
+2.Enter the name of your project in the Enter an item name field, and select the Pipeline project,
+ and click OK button.
+3.Enter Description (optional).
+4.Go to the Pipeline section, make sure the Definition field has the Pipeline script option
+ selected.
+5.Copy and paste the following declarative Pipeline script into a script field.
+  1. node('test'){
+  2. stage('stage1') {
+  3. sh '''echo stage1 steps'''
+  4. }
+  5. stage('stage2') {
+  6. sh '''echo stage2 steps'''
+  7. }
+  8. stage('stage3') {
+  9. sh '''echo stage3 steps'''
+ 10. }
+ 11 .}
+
+6. Click on Save, it will redirect to the Pipeline view page.
+
+7. On the left pane, click the Build Now button to execute your Pipeline.
+
+8. After Pipeline execution is completed, the Pipeline view will be as shown below.
+
+9.We can verify the history of executed build under the Build History by clicking the build number.
+
+10. Click on build number and select Console Output. Here you can see that the pipeline ran on a
+ slave machine.
+
+
+
